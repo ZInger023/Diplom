@@ -29,9 +29,15 @@
   <main class="px-3">
   <h1><?= $ticket->getTitle() ?></h1>
   <h2><?= $ticket->getText() ?></h2>
+  <br>
+<p><img src="<?php echo $path ?>" alt="Image"></p>
     <h2><a href="/tickets/<?= $ticket->getId()?>/delete"><?= 'Удалить заявку.' ?></a></h2>
     <h2><a href="/tickets/<?= $ticket->getId()?>/edit"><?= 'Редактировать.' ?></a></h2>
-    <br><br>
+    <br>
+    <?php if (($user->getRole()=='manager')&&(empty($ticket->getManagerId()))): ?>
+        <h2><a href="/tickets/<?= $ticket->getId()?>/setManager"><?= 'Принять заявку на рассмотрение.' ?></a></h2>
+    <?php  endif; ?>
+    <br>
 </div>
     <h2>Чат</h2>
     

@@ -9,7 +9,6 @@ use TechSupport\Exceptions\MissingDataException;
 
 class Chat extends BaseModel
 {
-    protected   $id;
     protected   $text;
     protected   $author_id;
     protected   $ticket_id;

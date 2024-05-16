@@ -3,7 +3,7 @@
 namespace TechSupport\Models\Users;
 
 use TechSupport\Models\BaseModel;
-use TechSupport\Exceptions\MissingDataException;
+use TechSupport\Models\Exceptions\MissingDataException;
 
 class User extends BaseModel
 {
@@ -64,7 +64,8 @@ public static function login(array $loginData): User
         throw new MissingDataException('Не передан password');
     }
 
-    $user = User::findElementByColumn('nickname', $loginData['nickname']);
+    $user = User::findElementByColumn('nickname', $loginData['nickname'])[0];
+    //var_dump($user);
     if ($user === null) {
         throw new MissingDataException('Нет пользователя с таким nickname');
     }
@@ -106,6 +107,11 @@ private function refreshAuthToken()
     public function getEmail(): string
     {
         return $this->email;
+    }
+
+    public function getRole(): string
+    {
+        return $this->role;
     }
 
     protected static function getTableName(): string 

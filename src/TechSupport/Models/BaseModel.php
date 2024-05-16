@@ -25,6 +25,12 @@ public static function findAll(): array
         return $db->query('SELECT * FROM `' . static::getTableName() . '`;', [], static::class);
     }
 
+    public static function getLastInsertId()
+    {
+        $db = Db::getInstance();
+        return $db->getLastInsertId();
+    }
+
 public static function getById(int $id): ?self
     {
         $db = Db::getInstance();
@@ -48,6 +54,7 @@ public function saveToDb(): void
 
 protected function update(array $mappedProperties): void
 {
+    var_dump($mappedProperties);
     $columns2params = [];
     $params2values = [];
     $index = 1;
@@ -111,17 +118,17 @@ private function mapPropertiesToDbFormat(): array
 
     abstract protected static function getTableName(): string;
 
-    public static function findElementByColumn(string $columnName, $value): ?self
+    public static function findElementByColumn(string $columnName, $value)
 {
     $db = Db::getInstance();
     $result = $db->query(
-        'SELECT * FROM `' . static::getTableName() . '` WHERE `' . $columnName . '` = :value LIMIT 1;',
+        'SELECT * FROM `' . static::getTableName() . '` WHERE `' . $columnName . '` = :value;',
         [':value' => $value],
         static::class
     );
     if ($result === []) {
         return null;
     }
-    return $result[0];
+    return $result;
 }
 }

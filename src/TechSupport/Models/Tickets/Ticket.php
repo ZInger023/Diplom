@@ -5,7 +5,7 @@ use TechSupport\Models\Users\User;
 use TechSupport\Services\Db;
 use TechSupport\Models\BaseModel;
 use TechSupport\Models\Users\UsersAuthService;
-use TechSupport\Exceptions\MissingDataException;
+use TechSupport\Models\Exceptions\MissingDataException;
 
 class Ticket extends BaseModel
 {
@@ -15,6 +15,7 @@ class Ticket extends BaseModel
     protected   $manager_id;
     protected   $created_at;
     protected   $status;
+    protected   $image_id;
 /*
  public function __construct(string $title,string $text)
     {
@@ -30,7 +31,8 @@ class Ticket extends BaseModel
     $this->title = $title;
     $this->text = $text;
     $this->author_id = UsersAuthService::getUserByToken()->getId();
-    $this->status = 'open';        
+    $this->status = 'open';
+    //$this->$image_id[0] = null; 
     }
 
     public function editTicket(string $title,string $text)
@@ -41,6 +43,11 @@ class Ticket extends BaseModel
     $this->title = $title;
     $this->text = $text;      
     } 
+
+    public function addImageId($id): void
+    {
+       $this->image_id = $id;
+    }
 
     public function getTitle(): string
     {
@@ -61,6 +68,12 @@ class Ticket extends BaseModel
     {
         return $this->author_id;
     }
+
+    public function getManagerId()
+    {
+        return $this->manager_id;
+    }
+
     public function setTitle($newTitle): void
     {
         $this->title = $newTitle;
@@ -75,9 +88,13 @@ class Ticket extends BaseModel
        $this->status = $newStatus;
     }
 
-    public function setManager($newManagerId): void
+    public function setManager(): void
     {
-       $this->manager_id = $newManagerId;
+        $manager = UsersAuthService::getUserByToken();
+        if ((empty(UsersAuthService::getUserByToken())) && ($manager->getRole()== 'manager')) {
+            throw new MissingDataException('Для этого нужно являться менеджером!');
+        }
+       $this->manager_id = $manager->getId();
     }
 
     public function setAuthor(User $author): void
@@ -88,5 +105,15 @@ class Ticket extends BaseModel
     protected static function getTableName(): string 
 {
     return 'tickets';
+}
+public function toArray() {
+    return [
+        'id' => $this->id,
+        'title' => $this->title,
+        'text' => $this->text,
+        'author_id' => $this->author_id,
+        'status' => $this->status,
+        'created_at' => $this->created_at
+    ];
 }
 }

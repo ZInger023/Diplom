@@ -18,16 +18,41 @@
     </div>
   </header>
   <main class="px-3">
-  <?php if(!empty($tickets)):?>
-  <?php foreach ($tickets as $ticket): ?>
-    <h2><a href="/tickets/<?= $ticket["id"] ?>"><?= $ticket["title"] ?></a></h2>
-    <p><?= $ticket["text"] ?></p>
-    <hr>
-<?php endforeach; ?>
-<?php endif;?>
-<?php if(empty($tickets)): ?>
-          <h4>Заявок пока нет. Если хотите оставить новую заявку нажмите<a class="nav-link" href="/tickets/insert">тут.</a></h4>
-          <?php endif; ?>
+  <h1>Список заявок</h1>
+    <div id="ticketsList">
+        <!-- Здесь будут отображаться заявки -->
+    </div>
+    <button onclick="sortTickets('open')">Показать свободные заявки</button>
+    <button onclick="sortTickets('answered')">Показать заявки с ответом менеджера</button>
+    <button onclick="sortTickets('closed')">Показать закрытые заявки</button>
+
+    <script>
+const tickets = <?php echo json_encode($tickets); ?>;
+//console.log(tickets[0].status)
+
+function displayTickets(ticketsArray) {
+    const ticketsListDiv = document.getElementById("ticketsList");
+    ticketsListDiv.innerHTML = "";
+
+    ticketsArray.forEach(ticket => {
+        const ticketDiv = document.createElement("div");
+        ticketDiv.textContent = `${ticket.title} - ${ticket.status}`;
+        ticketsListDiv.appendChild(ticketDiv);
+    });
+}
+
+
+function sortTickets(status) {
+    const sortedTickets = tickets.filter(ticket => ticket.status === status);
+    displayTickets(sortedTickets);
+}
+
+displayTickets(tickets);
+
+</script>
+
+
+
   </main>
 
   <footer class="mt-auto text-white-50">

@@ -27,7 +27,7 @@
   <main class="px-3">
   <form method="post" action="/tickets/insert" enctype="multipart/form-data">
         <input type="text" name="title" id="title" class="form-control" placeholder="Введите имя заявки" required="" autofocus="">
-        <textarea name="text" class="form-control" rows="10" cols="100" placeholder="Введите текст заявки"></textarea>
+        <textarea name="text" class="form-control" rows="10" cols="100" placeholder="Введите текст заявки" required=""></textarea>
         <input class="btn btn-lg btn-primary btn-block" type="file" multiple name="image[]"><br><br><br>
         <button class="btn btn-lg btn-primary btn-block" type="submit">Отправить</button>
     </form>

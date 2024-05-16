@@ -1,6 +1,6 @@
 <?php
 
-namespace TechSupport\Exceptions;
+namespace TechSupport\Models\Exceptions;
 
 class MissingDataException extends \Exception
 {

@@ -19,7 +19,7 @@ foreach ($routes as $pattern => $controllerAndAction) {
 }
 
 if (!$isRouteFound) {
-    throw new \TechSupport\Exceptions\NotFoundException();
+    throw new \TechSupport\Models\Exceptions\NotFoundException();
 }
 unset($matches[0]);
 
@@ -29,12 +29,12 @@ $actionName = $controllerAndAction[1];
 $controller = new $controllerName();
 $controller->$actionName(...$matches);
 
-} catch (\TechSupport\Exceptions\DbException $e) {
+} catch (\TechSupport\Models\Exceptions\DbException $e) {
     $view = new \TechSupport\View\View(__DIR__ . '/../templates/errors');
     $view->renderHtml('500.php', ['error' => $e->getMessage()], 500);
 }
 
-catch (\TechSupport\Exceptions\NotFoundException $e) {
+catch (\TechSupport\Models\Exceptions\NotFoundException $e) {
     $view = new \TechSupport\View\View(__DIR__ . '/../templates/errors');
     $view->renderHtml('404.php', ['error' => $e->getMessage()], 404);
 }

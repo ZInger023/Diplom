@@ -3,6 +3,7 @@
 
 return [
     '~^tickets/(\d+)$~' => [\TechSupport\Controllers\TicketController::class, 'view'],
+    '~^tickets/(\d+)/setManager$~' => [\TechSupport\Controllers\TicketController::class, 'setManager'],
     '~^tickets/insert$~' => [\TechSupport\Controllers\TicketController::class, 'insert'],
     '~^tickets/(\d+)/edit$~' => [\TechSupport\Controllers\TicketController::class, 'edit'],
     '~^tickets/(\d+)/delete$~' => [\TechSupport\Controllers\TicketController::class, 'delete'],

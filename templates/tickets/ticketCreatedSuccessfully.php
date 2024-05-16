@@ -26,7 +26,7 @@
 <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
   <main class="px-3">
     <h1>Заявка успешно создана! </h1>
-    <a href="diplom">На главную</a>
+    <a href="/">На главную</a>
   </main>
 
   <footer class="mt-auto text-white-50">
