@@ -13,4 +13,6 @@ return [
     '~^users/login$~' => [\TechSupport\Controllers\UsersController::class, 'login'],
     '~^tickets/addToChat/(\d+)$~' => [\TechSupport\Controllers\ChatController::class, 'insert'],
     '~^tickets/getChatMessages/(\d+)$~' => [\TechSupport\Controllers\ChatController::class, 'getChatMessages'],
+    '~^users/account/(\d+)$~' => [\TechSupport\Controllers\UsersController::class, 'myAccount'],
+    '~^users/editAccount$~' => [\TechSupport\Controllers\UsersController::class, 'editAccount'],
 ];

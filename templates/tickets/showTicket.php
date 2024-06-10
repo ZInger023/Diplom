@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <title>Регистрация</title>
+    <title><?= $ticket->getTitle() ?></title>
         <style>
                 .form-control {
                      width: 20%;
@@ -30,7 +30,11 @@
   <h1><?= $ticket->getTitle() ?></h1>
   <h2><?= $ticket->getText() ?></h2>
   <br>
-<p><img src="<?php echo $path ?>" alt="Image"></p>
+  <?php if (!empty($images)): ?>
+    <?php foreach ($images as $image): ?>
+    <p><img src="<?php echo $image->getPath() ?>" alt="Image"></p>
+    <?php endforeach; ?>
+        <?php endif; ?>
     <h2><a href="/tickets/<?= $ticket->getId()?>/delete"><?= 'Удалить заявку.' ?></a></h2>
     <h2><a href="/tickets/<?= $ticket->getId()?>/edit"><?= 'Редактировать.' ?></a></h2>
     <br>
@@ -56,6 +60,7 @@
 </div>
 <!-- ВЫНЕСТИ СКРИПТ В ОТДЕЛЬНЫЙ ФАЙЛ! -->
 <script>
+const ticketId = <?= $ticket->getId()?>;
 //POST-запрос на сервер
 function makeRequest(url, data) {
     return fetch(url, {
@@ -70,29 +75,26 @@ function makeRequest(url, data) {
             throw new Error('Network response was not ok');
         }
         return response.json();
-    });
+    })
+    .then(messages =>{
+        displayChatMessages(messages);
+    })
+    .catch(error => {
+        console.error('There was a problem with your fetch operation:', error);
+    })
 }
 
 // Обработчик события отправки формы
 document.getElementById('chatForm').addEventListener('submit', function(event) {
     event.preventDefault();
     const message = document.getElementById('messageInput').value;
-    const ticketId = <?= $ticket->getId()?>;
     const url = '/tickets/addToChat/' + ticketId;
-    const data = { message: message };
-
+    const data = { message: message, ticketId: ticketId };
     makeRequest(url, data)
-    .then(response => {
-        updateChatMessages();
-    }) 
-    .catch(error => {
-        console.error('There was a problem with your fetch operation:', error);
-    });
 });
 
 // Обновление списка сообщений
 function updateChatMessages() {
-    const ticketId = <?= $ticket->getId()?>;
     const url = '/tickets/getChatMessages/' + ticketId;
 
     fetch(url)
@@ -120,8 +122,8 @@ function displayChatMessages(messages) {
         chatMessagesDiv.appendChild(messageElement);
     });
 }
-
-window.onload = updateChatMessages;
+setInterval(updateChatMessages, 7000);
+window.onload = updateChatMessages();
     </script>
 </body>
 </html>

@@ -15,9 +15,15 @@ class MainController
 
     public function __construct()
     {
+        try {
         $this->user = UsersAuthService::getUserByToken();
         $this->view = new View(__DIR__ . '/../../../templates');
         $this->view->setVar('user', $this->user);
+        }
+        catch(MissingDataException $e) {
+            header('Location: /users/login');
+                exit();
+        } 
     }
 
     public function main()
@@ -48,7 +54,13 @@ class MainController
         else {
             $tickets = Ticket::findAll();
             $ticketsData = array_map(function($ticket) {
-                return $ticket->toArray();
+                return [
+                    'id' => $ticket->getId(),
+                    'title' => $ticket->getTitle(),
+                    'status' => $ticket->getStatus(),
+                    'created_at' => $ticket->getCreatedAt(),
+                    'manager_id' => $ticket->getManagerId() ?? null,
+                ];
             }, $tickets);
             $this->view->renderHtml('tickets/showToAdmin.php', ['tickets' => $ticketsData,'user' => UsersAuthService::getUserByToken()]);
         }

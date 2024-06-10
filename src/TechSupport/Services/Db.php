@@ -36,21 +36,6 @@ class Db
 
         return $sth->fetchAll(\PDO::FETCH_CLASS, $className);
     }
-/*
-    public function queryToTicketImagesTable(int $ticket_id,int $image_id)
-    {
-        $sql = "INSERT INTO ticket_images (ticket_id, image_id) VALUES (:ticket_id, :image_id)";
-        $sth = $this->pdo->prepare($sql);
-        $stmt->bindParam(':ticket_id', $ticket_id, PDO::PARAM_INT);
-        $stmt->bindParam(':image_id', $image_id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        if (false === $result) {
-            return null;
-        }
-
-        return $sth->fetchAll(\PDO::FETCH_CLASS, $className);
-    } */
 
     public static function getInstance(): self
     {

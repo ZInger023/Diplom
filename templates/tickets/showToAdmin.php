@@ -14,6 +14,7 @@
       <h3 class="float-md-start mb-0">Cover</h3>
       <nav class="nav nav-masthead justify-content-center float-md-end">
       <a class="nav-link" href="/dashboard">На главную</a>
+      <a class="nav-link" href="users/account/<?= $user->getId() ?>">Мой профиль.</a>
       </nav>
     </div>
   </header>
@@ -23,33 +24,51 @@
         <!-- Здесь будут отображаться заявки -->
     </div>
     <button onclick="sortTickets('open')">Показать свободные заявки</button>
-    <button onclick="sortTickets('answered')">Показать заявки с ответом менеджера</button>
+    <button onclick="sortTicketsByManager()">Показать рассматриваемые мной заявки</button>
     <button onclick="sortTickets('closed')">Показать закрытые заявки</button>
+    <button onclick="sortTicketsByDate()">Сначала новые</button>
 
     <script>
-const tickets = <?php echo json_encode($tickets); ?>;
-//console.log(tickets[0].status)
 
+const tickets = <?php echo json_encode($tickets); ?>;
+
+// Функция для отображения отсортированных заявок
 function displayTickets(ticketsArray) {
     const ticketsListDiv = document.getElementById("ticketsList");
-    ticketsListDiv.innerHTML = "";
+    ticketsListDiv.innerHTML = ""; // Очищаем содержимое списка заявок
 
     ticketsArray.forEach(ticket => {
         const ticketDiv = document.createElement("div");
-        ticketDiv.textContent = `${ticket.title} - ${ticket.status}`;
+        const ticketLink = document.createElement("a");
+        ticketLink.href = `/tickets/${ticket.id}`;
+        ticketLink.textContent = ticket.title;
+        ticketDiv.appendChild(ticketLink);
         ticketsListDiv.appendChild(ticketDiv);
     });
 }
 
-
+// Функция для сортировки заявок по статусу
 function sortTickets(status) {
     const sortedTickets = tickets.filter(ticket => ticket.status === status);
     displayTickets(sortedTickets);
 }
 
+function sortTicketsByDate() {
+    const openTickets = tickets.filter(ticket => ticket.status === 'open');
+    const sortedByDate = openTickets.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    displayTickets(sortedByDate);
+}
+
+function sortTicketsByManager() {
+    const answeredTickets = tickets.filter(ticket => ticket.manager_id == <?php echo $user->getId() ?> );
+    displayTickets(answeredTickets);
+}
+
 displayTickets(tickets);
 
+
 </script>
+
 
 
 

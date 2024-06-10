@@ -17,7 +17,7 @@ class UsersAuthService
         $token = $_COOKIE['token'] ?? '';
 
         if (empty($token)) {
-            throw new MissingDataException('Для этого нужно быть авторизованным пользователем.');
+            throw new MissingDataException('Токен пуст.');
             return null;
         }
 
@@ -27,13 +27,13 @@ class UsersAuthService
 
         if ($user == null) {
             throw new MissingDataException('Для этого нужно быть авторизованным пользователем.');
-            //return null;
         }
 
         if ($user->getAuthToken() !== $authToken) {
             return null;
         }
-
+        $user->setActivityTime();
+        $user->saveToDb();
         return $user;
     }
 }

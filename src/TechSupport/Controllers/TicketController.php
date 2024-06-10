@@ -9,9 +9,10 @@ use TechSupport\Models\Tickets\Ticket;
 use TechSupport\Models\Images\Image;
 use TechSupport\Models\Users\User;
 use TechSupport\Models\Users\UsersAuthService;
+use TechSupport\Services\EmailSender;
 use TechSupport\Models\Exceptions\MissingDataException;
 
-class TicketController
+class TicketController extends BaseController
 {
     /** @var View */
     private $view;
@@ -26,39 +27,88 @@ class TicketController
     public function view(int $ticketId)
     {
         $result = Ticket::getById($ticketId);
-        $imageId = Image::queryToTicketImagesTable($ticketId)->image_id;
-        $image = new Image();
-        $pathToImage = ($image->findElementByColumn('id', $imageId)[0])->getPath();
-       // var_dump($pathToImage);
-    
+        $ticket_images = Image::queryToTicketImagesTable($ticketId);
         if (empty($result)) {
             throw new NotFoundException();
             return;
         }
-        //queryToTicketImagesTable($ticket_id);
-        $this->view->renderHtml('tickets/showTicket.php', ['ticket' => $result,'path' =>$pathToImage,'user'=>$this->user]);
+        if(!empty($ticket_images)) {
+            $images = [];
+            foreach ($ticket_images as $ticket_image) {
+                $image = Image::getImage($ticket_image->image_id);
+                array_push($images, $image);
+            }
+        $this->view->renderHtml('tickets/showTicket.php', ['ticket' => $result,'images' =>$images,'user'=>$this->user]);
+        }
+        else{
+            $this->view->renderHtml('tickets/showTicket.php', ['ticket' => $result,'user'=>$this->user]);
+        }
     }
 
     public function edit(int $ticketId): void
     {
+        try {
+        $user =  UsersAuthService::getUserByToken();
         $ticket = ticket::getById($ticketId);
-        if(!empty($_POST)) {
-            $ticket->editTicket($_POST['title'],$_POST['text']);
-            $ticket->saveToDb();
-        }
-        //$ticket = ticket::getById($ticketId);
-        //$this->view->renderHtml('tickets/editTicket.php',['title'=>$ticket->getTitle(),'text'=>$ticket->getText()]);
-        $this->view->renderHtml('tickets/editTicket.php',['ticket'=>$ticket]);
-
-        if ($ticket === null) {
+        $ticket_images = Image::queryToTicketImagesTable($ticketId);
+        if (empty($ticket)) {
             throw new NotFoundException();
             return;
         }
-        //$ticket->editTicket($_POST['title'],$_POST['text']);
-        //$ticket->saveToDb();
-        //$ticket->setTitle('Новое название статьи');
-        //$ticket->setText('Новый текст статьи');
-        //var_dump($ticket); 
+    }
+    catch (NotFoundException $e) {
+        header('Location: /users/login');
+        exit();
+        }
+        catch (MissingDataException $e) {
+            $this->view->renderHtml('main/loginPage.php', ['error' => $e->getMessage()]);
+        }
+        if(!empty($ticket_images)) {
+            $images = [];
+            foreach ($ticket_images as $ticket_image) {
+                $image = Image::getImage($ticket_image->image_id);
+                array_push($images, $image);
+            }
+         }
+        if(!empty($_POST)) {
+            if (!empty($_POST['delete_images'])) {
+                foreach ($_POST['delete_images'] as $imageId) {
+                    $image = Image::getById($imageId);
+                    if ($image) {
+                        $image->deleteFromTicketImagesTable($ticket->getId());
+                        $image->deleteFromDb();
+                    }
+                }
+            }
+            if (!empty($_FILES['new_images']['name'][0])) {
+                $imageIds = [];
+                foreach ($_FILES['new_images']['name'] as $key => $name) {
+                    $tmp_name = $_FILES['new_images']['tmp_name'][$key];
+                    $path = "../images/" . basename($name);
+                    $moving_path = "../www/images/" . basename($name);
+        
+                    if (move_uploaded_file($tmp_name, $moving_path)) {
+                        $image = new Image();
+                        $image->setPath($path);
+                        $image->saveToDb();
+                        $imageIds[] = $image->getId();
+                    } else {
+                        echo "Произошла ошибка при загрузке файла.";
+                    }
+                }
+
+                foreach ($imageIds as $imageId) {
+                    Image::insertToTicketImagesTable($ticket->getId(), $imageId);
+                }
+
+            }
+            $ticket->editTicket($_POST['title'],$_POST['text']);
+            $ticket->saveToDb();
+            $this->view->renderHtml('tickets/ticketEditedSuccessfully.php',['ticket'=>$ticket]);
+        }
+        else {
+            $this->view->renderHtml('tickets/editTicket.php',['ticket'=>$ticket,'images' => $images]);
+        }
     }
 
     public function insert(): void
@@ -69,26 +119,28 @@ class TicketController
             $ticket = new Ticket();
             $ticket->createNewTicket($_POST['title'],$_POST['text']);
             $ticket->saveToDb();
-                if (!empty($_FILES)) {
-                    foreach ($_FILES['image']['name'] as $key => $name) {
-                        $tmp_name = $_FILES['image']['tmp_name'][$key];
-                        $path = "../images/" . basename($name);
-                        $moving_path = "../www/images/" . basename($name);
-                        if (move_uploaded_file($tmp_name, $moving_path)) {
-                            $image = new Image();
-                            $image->setPath($path);
-                            $image->saveToDb();
-                            $imageIds[] = $image->getId();
-                                foreach($imageIds as $imageId) {
-                                    $image->insertToTicketImagesTable( $ticket->getId(),$imageId);
-                                }
-                        }
-                        else {
-                            echo "Произошла ошибка при загрузке файла.";
-                        }
-                    $ticket->addImageId($imageIds);
+            if (!empty($_FILES['image']['name'][0])) {
+                $imageIds = [];
+                foreach ($_FILES['image']['name'] as $key => $name) {
+                    $tmp_name = $_FILES['image']['tmp_name'][$key];
+                    $path = "../images/" . basename($name);
+                    $moving_path = "../www/images/" . basename($name);
+                    if (move_uploaded_file($tmp_name, $moving_path)) {
+                        $image = new Image();
+                        $image->setPath($path);
+                        $image->saveToDb();
+                        $imageIds[] = $image->getId();
+                    } else {
+                        echo "Произошла ошибка при загрузке файла.";
                     }
                 }
+            
+                foreach($imageIds as $imageId) {
+                    $image->insertToTicketImagesTable($ticket->getId(), $imageId);
+                }
+            }
+            $user =  UsersAuthService::getUserByToken();
+            $this->sendEmailToAllManagers('Cоздание заявки.', $user->getName());
             $this->view->renderHtml('tickets/ticketCreatedSuccessfully.php');
             return;
         }
@@ -101,13 +153,29 @@ class TicketController
 
 public function delete(int $ticketId): void
 {
-    $ticket = Ticket::getById($ticketId);
-    $ticket->delete();
+        $user =  UsersAuthService::getUserByToken();
+        $ticket = Ticket::getById($ticketId);
+        if ($user->getRole() == 'user') {
+            $this->sendEmailToManager('Удаление заявки', $ticket);
+        }
+        try{
+        $ticket->deleteTicket();
+        }
+        catch (MissingDataException $e) {
+                $this->view->renderHtml('main/loginPage.php', ['error' => $e->getMessage()]);
+        }
+        header('Location: /');
+        exit();
 }
+
 public function setManager(int $ticketId): void
 {
-    $ticket = Ticket::getById($ticketId);
-    $ticket->setManager();
-    $ticket->saveToDb();
+        $ticket = Ticket::getById($ticketId);
+        $ticket->setManager();
+        $ticket->setStatus('viewed');
+        $ticket->saveToDb();
+        header('Location: /');
+        exit();
 }
+
 }

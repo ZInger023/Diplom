@@ -15,13 +15,6 @@ class Ticket extends BaseModel
     protected   $manager_id;
     protected   $created_at;
     protected   $status;
-    protected   $image_id;
-/*
- public function __construct(string $title,string $text)
-    {
-    $this->title = $title;
-    $this->text = $text;      
-    } */
 
     public function createNewTicket(string $title,string $text)
     {
@@ -32,17 +25,26 @@ class Ticket extends BaseModel
     $this->text = $text;
     $this->author_id = UsersAuthService::getUserByToken()->getId();
     $this->status = 'open';
-    //$this->$image_id[0] = null; 
     }
 
     public function editTicket(string $title,string $text)
     {
-        if (empty(UsersAuthService::getUserByToken())) {
-            throw new MissingDataException('Пользователь не авторизован!');
+        $user = UsersAuthService::getUserByToken();
+        if (($user->getId() != $this->author_id) && ( $user->getRole() != 'manager')) {
+            throw new MissingDataException('Вы не являетесь автором этой заявки!');
         }
     $this->title = $title;
     $this->text = $text;      
-    } 
+    }
+
+    public function deleteTicket()
+    {
+        $user = UsersAuthService::getUserByToken();
+        if (($user->getId() != $this->author_id) && ( $user->getRole() != 'manager')) {
+            throw new MissingDataException('Вы не являетесь автором этой заявки!');
+        }
+        $this->delete();     
+    }
 
     public function addImageId($id): void
     {
@@ -57,6 +59,16 @@ class Ticket extends BaseModel
     public function getText(): string
     {
         return $this->text;
+    }
+
+    public function getCreatedAt(): string
+    {
+        return $this->created_at;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
     }
 
     public function getAuthor(): User

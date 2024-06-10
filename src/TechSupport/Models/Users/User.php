@@ -13,6 +13,8 @@ class User extends BaseModel
     protected $auth_token;
   //protected $email_verified_at;
     protected $role;
+    protected $created_at;
+    protected $last_activity_at;
 
     /*public function __construct(string $name,string $email,string $password)
     {
@@ -48,7 +50,7 @@ class User extends BaseModel
     $user->email = $userData['email'];
     $user->password_hash = password_hash($userData['password'], PASSWORD_DEFAULT);
     $user->role = 'user';
-    $user->auth_token = sha1(random_bytes(100)) . sha1(random_bytes(100));
+    $user->auth_token = hash('sha256', random_bytes(256));
     $user->saveToDb();
 
     return $user;
@@ -65,7 +67,6 @@ public static function login(array $loginData): User
     }
 
     $user = User::findElementByColumn('nickname', $loginData['nickname'])[0];
-    //var_dump($user);
     if ($user === null) {
         throw new MissingDataException('Нет пользователя с таким nickname');
     }
@@ -74,15 +75,29 @@ public static function login(array $loginData): User
         throw new MissingDataException('Неправильный пароль');
     }
 
-    /*if (!$user->isConfirmed) {
-        throw new MissingDataException('Пользователь не подтверждён');
-    } */
-
     $user->refreshAuthToken();
     $user->saveTODb();
 
     return $user;
 }
+
+public function isOnline(): string
+{
+    $currentDateTime = time();
+    $lastActivityTimestamp = strtotime($this->last_activity_at);
+    $timeWithoutActivity = $currentDateTime - $lastActivityTimestamp;
+
+    if ($timeWithoutActivity < 120) {
+        return 'Online';
+    }
+    else if ($timeWithoutActivity < 300 ) {
+        return 'Last seen recently';
+    }
+    else {
+        return 'Offline';
+    }
+}
+
 
 public function getPasswordHash(): string
 {
@@ -91,7 +106,7 @@ public function getPasswordHash(): string
 
 private function refreshAuthToken()
 {
-    $this->auth_token = sha1(random_bytes(100)) . sha1(random_bytes(100));
+    $this->auth_token = hash('sha256', random_bytes(256));
 }
 
     public function getAuthToken(): string
@@ -101,7 +116,7 @@ private function refreshAuthToken()
 
     public function getName(): string
     {
-        return $this->name;
+        return $this->nickname;
     }
 
     public function getEmail(): string
@@ -112,6 +127,30 @@ private function refreshAuthToken()
     public function getRole(): string
     {
         return $this->role;
+    }
+    public function getCreatedAt()
+    {
+        return $this->created_at;
+    }
+
+    public function getActivityTime()
+    {
+        return $this->last_activity_at;
+    }
+
+    public function setName($name)
+    {
+        $this->nickname = $name;
+    }
+
+    public function setEmail($email)
+    {
+        $this->email = $email;
+    }
+
+    public function setActivityTime()
+    {
+        $this->last_activity_at = date('Y-m-d H:i:s');
     }
 
     protected static function getTableName(): string 
